@@ -1,4 +1,4 @@
-package edu.ucsb.cs.cs190i.samuel_dong.imagetagexplorer;
+package edu.ucsb.cs.cs190i.deannapham.imagetagexplorer;
 
 import org.junit.Test;
 
