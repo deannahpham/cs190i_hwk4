@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -46,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int PICK_IMAGE_REQUEST = 9876;
     public final static int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 1034;
 
+    public ImageView camera_image, gallery_image;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -131,6 +133,8 @@ public class MainActivity extends AppCompatActivity {
         Intent galleryIntent = new Intent();
         galleryIntent.setType("image/*");
         galleryIntent.setAction(Intent.ACTION_GET_CONTENT);
+        photoFileName="image"+System.currentTimeMillis()+".jpg";
+        galleryIntent.putExtra(MediaStore.EXTRA_OUTPUT, getPhotoFileUri(photoFileName));
         startActivityForResult(galleryIntent, PICK_IMAGE_REQUEST);
 
     }
@@ -144,18 +148,21 @@ public class MainActivity extends AppCompatActivity {
                 if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE) {
                     if (resultCode == RESULT_OK) {
                         Toast.makeText(this, "Picture was taken!", Toast.LENGTH_SHORT).show();
-                        File mediaStorageDir = new File(
-                                getExternalFilesDir(Environment.DIRECTORY_PICTURES), APP_TAG);
-
-                        // Return the file target for the photo based on filename
-                        File file = new File(mediaStorageDir.getPath() + File.separator + photoFileName);
+//                        File mediaStorageDir = new File(
+//                                getExternalFilesDir(Environment.DIRECTORY_PICTURES), APP_TAG);
+//
+//                        // Return the file target for the photo based on filename
+//                        File file = new File(mediaStorageDir.getPath() + File.separator + photoFileName);
                         //useful for testing, won't beed this
-                        FragmentTransaction ft = getFragmentManager().beginTransaction();
-                        android.app.DialogFragment tagFrag = new TagEntryFragment();
-                        tagFrag.show(ft, "dialog");
-                        //Bitmap image = BitmapFactory.decodeFile(file.getAbsolutePath());
-                        //final ImageView imageView = (ImageView) findViewById(R.id.imageView);
-                        //imageView.setImageBitmap(image);
+                        Uri takenPhoto = getPhotoFileUri(photoFileName);
+                        TagEntryFragment frag = TagEntryFragment.newInstance(takenPhoto);
+                        frag.show(getSupportFragmentManager().beginTransaction(), "tag");
+
+
+//                        Bitmap image = BitmapFactory.decodeFile(file.getAbsolutePath());
+//                        camera_image = (ImageView) findViewById(R.id.imageView);
+//                        camera_image.setImageBitmap(image);
+                        //showEditDialog();
                         //get path/uri and write to databse right here
 
                     } else { // Result was a failure
@@ -169,19 +176,9 @@ public class MainActivity extends AppCompatActivity {
 
                     if (requestCode == PICK_IMAGE_REQUEST) {
                         // if we are here, we are hearing back from image gallery
-                        Uri imageUri = data.getData(); // can i use this instead of getphotouri? still URI ?
-                        InputStream inputStream;
-                        try {
-                            //address of image on SD card
-                            inputStream = getContentResolver().openInputStream(imageUri);
-                            Bitmap image = BitmapFactory.decodeStream(inputStream);
-                            final ImageView imageView = (ImageView) findViewById(R.id.imageView);
-                            imageView.setImageBitmap(image);
-
-                        } catch (IOException ex) {
-                            System.out.println(ex);
-                            Toast.makeText(this, "Unable to open image", Toast.LENGTH_LONG).show();
-                        }
+                        Uri takenPhoto = data.getData();
+                        TagEntryFragment frag = TagEntryFragment.newInstance(takenPhoto);
+                        frag.show(getSupportFragmentManager().beginTransaction(), "tag");
                     }
                 }
                 break;
@@ -248,25 +245,10 @@ public class MainActivity extends AppCompatActivity {
         }
         return super.onOptionsItemSelected(item);
     }
+
+//    private void showEditDialog() {
+//        TagEntryFragment frag = TagEntryFragment.newInstance("tag");
+//        frag.show(getSupportFragmentManager().beginTransaction(), "tag");
+//    }
+
 }
-
-
-//        TaggedImageRetriever.getTaggedImageByIndex(0, new TaggedImageRetriever.TaggedImageResultListener() {
-//            @Override
-//            public void onTaggedImage(TaggedImageRetriever.TaggedImage image) {
-//                if (image != null) {
-//                    try (FileOutputStream stream = openFileOutput("Test.jpg", Context.MODE_PRIVATE)){
-//                        image.image.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-//                        image.image.recycle();
-//                    } catch (IOException e) {
-//                    }
-//                    Picasso.with(MainActivity.this).load(getFileStreamPath("Test.jpg")).resize(500,500).centerCrop().into(imageView);
-//                    // imageView.setImageBitmap(image.image);
-//                    StringBuilder tagList = new StringBuilder();
-//                    for (String p : image.tags) {
-//                        tagList.append(p + "\n");
-//                    }
-//                    textView.setText(textView.getText() + "\n\n" + tagList.toString());
-//                }
-//            }
-//        });
